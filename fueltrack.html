@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FuelTrack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+/* =====================================================
+   FUELTRACK — GitHub Pages + Google Sheets
+   ===================================================== */
+
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0f14;
+  --surface:#151820;
+  --surface2:#1e2230;
+  --surface3:#252a3a;
+  --border:#2a3050;
+  --border2:#3a4265;
+  --text:#e8ecf5;
+  --muted:#7a85a0;
+  --subtle:#3d4560;
+  --accent:#f5a623;
+  --green:#4cc97a;
+  --red:#f05a5a;
+  --blue:#4d9cff;
+  --radius:12px;
+  --radius-sm:8px;
+}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* NAV */
+nav{display:flex;align-items:center;justify-content:space-between;padding:.85rem 1.5rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:100;flex-wrap:wrap;gap:10px}
+.logo{display:flex;align-items:center;gap:10px;font-size:1.05rem;font-weight:700;letter-spacing:-.02em}
+.logo-icon{width:34px;height:34px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#0d0f14;font-size:17px;flex-shrink:0}
+.tab-bar{display:flex;gap:3px;background:var(--surface2);padding:3px;border-radius:var(--radius-sm);border:1px solid var(--border);flex-wrap:wrap}
+.tab{padding:6px 13px;border-radius:6px;border:none;background:transparent;color:var(--muted);font-family:'Syne',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap}
+.tab.active{background:var(--surface3);color:var(--text)}
+.tab:hover:not(.active){color:var(--text)}
+
+/* MAIN */
+main{padding:1.5rem;max-width:860px;margin:0 auto}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem}
+
+/* STATS */
+.grid-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1rem}
+.stat{background:var(--surface2);border-radius:var(--radius-sm);padding:1rem;border:1px solid var(--border)}
+.stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;font-family:'DM Mono',monospace}
+.stat-val{font-size:1.35rem;font-weight:700;letter-spacing:-.03em}
+.stat-sub{font-size:10px;color:var(--muted);margin-top:3px;font-family:'DM Mono',monospace}
+.c-accent{color:var(--accent)}
+.c-green{color:var(--green)}
+.c-red{color:var(--red)}
+.c-blue{color:var(--blue)}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;margin-top:.75rem}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:8px 10px;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.06em}
+td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;font-family:'DM Mono',monospace}
+.badge-fuel{background:rgba(245,166,35,.15);color:var(--accent)}
+.badge-oil{background:rgba(77,156,255,.15);color:var(--blue)}
+.badge-maint{background:rgba(76,201,122,.15);color:var(--green)}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:540px){.form-grid{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.04em;font-family:'DM Mono',monospace}
+.field input,.field select,.field textarea{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;color:var(--text);font-family:'Syne',sans-serif;font-size:14px;width:100%;transition:border .15s}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent)}
+.field textarea{resize:vertical;min-height:68px}
+.field select option{background:var(--surface2)}
+.full-col{grid-column:1/-1}
+.loc-row{display:flex;gap:8px;align-items:flex-end}
+.loc-row input{flex:1}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:var(--radius-sm);border:none;font-family:'Syne',sans-serif;font-weight:600;font-size:13px;cursor:pointer;transition:all .15s}
+.btn-primary{background:var(--accent);color:#0d0f14}
+.btn-primary:hover{background:#e09820}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--surface3)}
+.btn-danger{background:rgba(240,90,90,.1);color:var(--red);border:1px solid rgba(240,90,90,.2);padding:5px 10px;font-size:12px}
+.btn-danger:hover{background:rgba(240,90,90,.2)}
+.row-btns{display:flex;gap:8px;margin-top:1rem;flex-wrap:wrap}
+
+/* CHART */
+.chart-wrap{height:140px;margin-top:12px;display:flex;align-items:flex-end;gap:5px}
+.bar-col{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0;height:100%}
+.bar-label{font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;text-align:center}
+.bar-area{flex:1;display:flex;align-items:flex-end;width:100%}
+.bar{width:100%;border-radius:3px 3px 0 0;min-height:2px;transition:height .3s}
+.bar-val{font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;text-align:center}
+
+/* SECTION TITLE */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.section-title{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+
+/* EMPTY */
+.empty{text-align:center;padding:2rem 1rem;color:var(--muted);font-size:13px}
+.empty i{font-size:28px;display:block;margin-bottom:8px;opacity:.35}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:11px 16px;font-size:13px;font-weight:500;color:var(--text);z-index:9999;display:none;gap:8px;align-items:center;max-width:280px}
+.toast.show{display:flex}
+.toast.error{border-color:rgba(240,90,90,.4);color:var(--red)}
+
+/* GPS */
+.gps-tag{font-size:10px;color:var(--green);font-family:'DM Mono',monospace;padding:3px 8px;background:rgba(76,201,122,.08);border-radius:4px;margin-top:4px;display:none}
+
+/* SPINNER */
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* CAR CHIPS */
+.car-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1rem}
+.car-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;background:var(--surface2);border:1px solid var(--border);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.car-chip.active{border-color:var(--accent);color:var(--accent)}
+.car-chip:hover:not(.active){border-color:var(--border2)}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;align-items:center;justify-content:center;padding:1rem}
+.modal-bg.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:1.5rem;width:100%;max-width:400px;max-height:90vh;overflow-y:auto}
+.modal h3{margin-bottom:1rem;font-size:.95rem;display:flex;align-items:center;gap:8px}
+
+/* CONFIG BANNER */
+.config-banner{background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.3);border-radius:var(--radius-sm);padding:1rem 1.25rem;margin-bottom:1rem;font-size:13px;display:flex;align-items:flex-start;gap:10px}
+.config-banner i{color:var(--accent);font-size:18px;flex-shrink:0;margin-top:1px}
+
+/* UPCOMING */
+.upcoming-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.upcoming-row:last-child{border-bottom:none}
+</style>
+</head>
+<body>
+
+<!-- =====================================================
+     ⚙️  CONFIGURAÇÃO — preencha as 2 linhas abaixo
+     ===================================================== -->
+<script>
+// ▼▼▼ COLE AQUI O ID DA SUA PLANILHA DO GOOGLE SHEETS ▼▼▼
+const SHEET_ID = "COLE_AQUI_O_ID_DA_PLANILHA";
+
+// ▼▼▼ COLE AQUI A URL DO SEU GOOGLE APPS SCRIPT ▼▼▼
+const SCRIPT_URL = "COLE_AQUI_A_URL_DO_APPS_SCRIPT";
+</script>
+<!-- ===================================================== -->
+
+<nav>
+  <div class="logo">
+    <div class="logo-icon"><i class="ti ti-car" aria-hidden="true"></i></div>
+    FuelTrack
+  </div>
+  <div class="tab-bar">
+    <button class="tab active" onclick="showTab('dashboard')"><i class="ti ti-dashboard" aria-hidden="true"></i> Painel</button>
+    <button class="tab" onclick="showTab('fuel')"><i class="ti ti-gas-station" aria-hidden="true"></i> Abastecer</button>
+    <button class="tab" onclick="showTab('maintenance')"><i class="ti ti-tool" aria-hidden="true"></i> Manutenção</button>
+    <button class="tab" onclick="showTab('history')"><i class="ti ti-history" aria-hidden="true"></i> Histórico</button>
+  </div>
+</nav>
+
+<main>
+
+<!-- ── DASHBOARD ── -->
+<div id="tab-dashboard">
+
+  <div id="config-warning" class="config-banner" style="display:none">
+    <i class="ti ti-alert-triangle"></i>
+    <div>
+      <strong>Configuração pendente.</strong> Abra o arquivo <code>fueltrack.html</code> e preencha
+      <code>SHEET_ID</code> e <code>SCRIPT_URL</code> no topo do script.
+    </div>
+  </div>
+
+  <div class="car-chips" id="car-chips-dash"></div>
+
+  <div class="grid-stats">
+    <div class="stat"><div class="stat-label">Total Gasto</div><div class="stat-val c-accent" id="s-total">R$ —</div><div class="stat-sub">abastecimentos</div></div>
+    <div class="stat"><div class="stat-label">Consumo Médio</div><div class="stat-val c-green" id="s-avg">— km/L</div><div class="stat-sub">tanques cheios</div></div>
+    <div class="stat"><div class="stat-label">Último Preço</div><div class="stat-val c-blue" id="s-price">R$ —/L</div><div class="stat-sub">por litro</div></div>
+    <div class="stat"><div class="stat-label">KM Registrados</div><div class="stat-val" id="s-km">—</div><div class="stat-sub">total no período</div></div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><i class="ti ti-chart-bar" aria-hidden="true"></i> Litros por Abastecimento</div>
+    <div class="chart-wrap" id="chart-liters"><div class="empty" style="width:100%"><i class="ti ti-chart-bar"></i>Sem dados</div></div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><i class="ti ti-currency-dollar" aria-hidden="true"></i> Custo por Abastecimento (R$)</div>
+    <div class="chart-wrap" id="chart-cost"><div class="empty" style="width:100%"><i class="ti ti-chart-bar"></i>Sem dados</div></div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><i class="ti ti-calendar-event" aria-hidden="true"></i> Próximas Manutenções</div>
+    <div id="upcoming-maint"><div class="empty"><i class="ti ti-check"></i>Sem manutenções pendentes</div></div>
+  </div>
+
+</div>
+
+<!-- ── ABASTECER ── -->
+<div id="tab-fuel" style="display:none">
+  <div class="card">
+    <div class="section-header">
+      <div class="section-title"><i class="ti ti-gas-station" aria-hidden="true"></i> Novo Abastecimento</div>
+      <div class="spinner" id="spin-fuel"></div>
+    </div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Carro</label>
+        <select id="f-car"></select>
+      </div>
+      <div class="field">
+        <label>Data</label>
+        <input type="date" id="f-date">
+      </div>
+      <div class="field">
+        <label>Litros abastecidos</label>
+        <input type="number" id="f-liters" placeholder="ex: 40.5" min="0" step="0.01">
+      </div>
+      <div class="field">
+        <label>Preço por Litro (R$)</label>
+        <input type="number" id="f-price" placeholder="ex: 5.89" min="0" step="0.01">
+      </div>
+      <div class="field">
+        <label>KM atual (odômetro)</label>
+        <input type="number" id="f-km" placeholder="ex: 85200" min="0">
+      </div>
+      <div class="field">
+        <label>Tipo de Combustível</label>
+        <select id="f-ftype">
+          <option>Gasolina Comum</option>
+          <option>Gasolina Aditivada</option>
+          <option>Etanol</option>
+          <option>Diesel</option>
+          <option>GNV</option>
+        </select>
+      </div>
+      <div class="field full-col">
+        <label>Localização do Posto</label>
+        <div class="loc-row">
+          <input type="text" id="f-location" placeholder="Nome ou endereço do posto">
+          <button class="btn btn-ghost" onclick="getGPS()" style="white-space:nowrap;padding:9px 14px">
+            <i class="ti ti-current-location" aria-hidden="true"></i> GPS
+          </button>
+        </div>
+        <div class="gps-tag" id="gps-tag"></div>
+      </div>
+      <div class="field">
+        <label>Tanque cheio?</label>
+        <select id="f-full">
+          <option value="1">Sim — tanque cheio</option>
+          <option value="0">Não — parcial</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Notas</label>
+        <input type="text" id="f-notes" placeholder="Observações opcionais">
+      </div>
+    </div>
+    <div class="row-btns">
+      <button class="btn btn-primary" id="btn-save-fuel" onclick="saveFuel()">
+        <i class="ti ti-device-floppy" aria-hidden="true"></i> Salvar Abastecimento
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MANUTENÇÃO ── -->
+<div id="tab-maintenance" style="display:none">
+
+  <!-- ÓLEO -->
+  <div class="card">
+    <div class="section-header">
+      <div class="section-title"><i class="ti ti-oil" aria-hidden="true"></i> Troca de Óleo</div>
+      <div class="spinner" id="spin-oil"></div>
+    </div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Carro</label>
+        <select id="o-car"></select>
+      </div>
+      <div class="field">
+        <label>Data</label>
+        <input type="date" id="o-date">
+      </div>
+      <div class="field">
+        <label>KM na troca</label>
+        <input type="number" id="o-km" placeholder="ex: 85000">
+      </div>
+      <div class="field">
+        <label>Próxima troca (KM)</label>
+        <input type="number" id="o-next-km" placeholder="ex: 90000">
+      </div>
+      <div class="field">
+        <label>Tipo de óleo</label>
+        <input type="text" id="o-otype" placeholder="ex: 5W30 Sintético">
+      </div>
+      <div class="field">
+        <label>Custo (R$)</label>
+        <input type="number" id="o-cost" placeholder="ex: 250.00" step="0.01">
+      </div>
+      <div class="field full-col">
+        <label>Notas</label>
+        <input type="text" id="o-notes" placeholder="Marca, oficina, observações">
+      </div>
+    </div>
+    <div class="row-btns">
+      <button class="btn btn-primary" id="btn-save-oil" onclick="saveOil()">
+        <i class="ti ti-device-floppy" aria-hidden="true"></i> Salvar Troca de Óleo
+      </button>
+    </div>
+  </div>
+
+  <!-- MANUTENÇÃO GERAL -->
+  <div class="card">
+    <div class="section-header">
+      <div class="section-title"><i class="ti ti-tool" aria-hidden="true"></i> Manutenção Geral</div>
+      <div class="spinner" id="spin-maint"></div>
+    </div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Carro</label>
+        <select id="m-car"></select>
+      </div>
+      <div class="field">
+        <label>Data</label>
+        <input type="date" id="m-date">
+      </div>
+      <div class="field">
+        <label>Tipo de manutenção</label>
+        <select id="m-type">
+          <option>Revisão Geral</option>
+          <option>Troca de Pneus</option>
+          <option>Alinhamento / Balanceamento</option>
+          <option>Pastilhas de Freio</option>
+          <option>Filtro de Ar</option>
+          <option>Correia Dentada</option>
+          <option>Bateria</option>
+          <option>Vela de Ignição</option>
+          <option>Fluido de Freio</option>
+          <option>Ar-condicionado</option>
+          <option>Amortecedor</option>
+          <option>Outro</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Custo (R$)</label>
+        <input type="number" id="m-cost" placeholder="ex: 350.00" step="0.01">
+      </div>
+      <div class="field">
+        <label>KM</label>
+        <input type="number" id="m-km" placeholder="ex: 85200">
+      </div>
+      <div class="field">
+        <label>Próxima revisão (data)</label>
+        <input type="date" id="m-next-date">
+      </div>
+      <div class="field full-col">
+        <label>Descrição / Notas</label>
+        <textarea id="m-notes" placeholder="Descreva o serviço realizado, peças trocadas, etc."></textarea>
+      </div>
+    </div>
+    <div class="row-btns">
+      <button class="btn btn-primary" id="btn-save-maint" onclick="saveMaint()">
+        <i class="ti ti-device-floppy" aria-hidden="true"></i> Salvar Manutenção
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── HISTÓRICO ── -->
+<div id="tab-history" style="display:none">
+  <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center">
+    <select id="h-filter-car" onchange="renderHistory()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:var(--radius-sm);font-family:'Syne',sans-serif;font-size:13px"></select>
+    <select id="h-filter-type" onchange="renderHistory()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:var(--radius-sm);font-family:'Syne',sans-serif;font-size:13px">
+      <option value="">Todos os tipos</option>
+      <option value="fuel">Abastecimento</option>
+      <option value="oil">Troca de Óleo</option>
+      <option value="maintenance">Manutenção</option>
+    </select>
+    <button class="btn btn-ghost" onclick="loadAll()" style="margin-left:auto">
+      <i class="ti ti-refresh" aria-hidden="true"></i> Atualizar
+    </button>
+  </div>
+  <div class="card" style="padding:.75rem">
+    <div class="table-wrap"><div id="history-table"><div class="empty"><i class="ti ti-loader"></i>Carregando...</div></div></div>
+  </div>
+</div>
+
+</main>
+
+<!-- MODAL CARROS -->
+<div class="modal-bg" id="car-modal">
+  <div class="modal">
+    <h3><i class="ti ti-car" aria-hidden="true"></i> Gerenciar Carros</h3>
+    <div id="modal-car-list" style="margin-bottom:1rem"></div>
+    <div style="display:flex;gap:8px;margin-bottom:1rem">
+      <input type="text" id="new-car-name" placeholder="Nome do carro (ex: Corolla 2021)"
+        style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;color:var(--text);font-family:'Syne',sans-serif;font-size:14px"
+        onkeydown="if(event.key==='Enter')addCar()">
+      <button class="btn btn-primary" onclick="addCar()" style="padding:9px 14px">
+        <i class="ti ti-plus" aria-hidden="true"></i>
+      </button>
+    </div>
+    <button class="btn btn-ghost" onclick="closeCarModal()" style="width:100%">Fechar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <i class="ti ti-check" aria-hidden="true"></i>
+  <span id="toast-msg"></span>
+</div>
+
+<script>
+/* =======================================================
+   STATE
+   ======================================================= */
+let state = {
+  cars: [],        // [{id, name}]
+  fuelLogs: [],
+  oilLogs: [],
+  maintLogs: [],
+  activeCar: null
+};
+
+let gpsCoords = null;
+
+/* =======================================================
+   UTILITY
+   ======================================================= */
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+function fmt(n) {
+  return (n || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function today() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function toast(msg, type = 'ok') {
+  const el = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  el.className = 'toast show' + (type === 'err' ? ' error' : '');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+function spin(id, on) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = on ? 'block' : 'none';
+}
+
+function setBusy(btnId, spinId, busy) {
+  const btn = document.getElementById(btnId);
+  if (btn) btn.disabled = busy;
+  spin(spinId, busy);
+}
+
+function checkConfig() {
+  const bad = SHEET_ID === 'COLE_AQUI_O_ID_DA_PLANILHA' || SCRIPT_URL === 'COLE_AQUI_A_URL_DO_APPS_SCRIPT';
+  document.getElementById('config-warning').style.display = bad ? 'flex' : 'none';
+  return !bad;
+}
+
+/* =======================================================
+   GOOGLE SHEETS API
+   ======================================================= */
+
+// Lê uma aba inteira via GET (jsonp trick para evitar CORS no Apps Script publicado)
+function sheetGet(sheetName) {
+  return new Promise((resolve, reject) => {
+    const cb = '_cb_' + uid();
+    window[cb] = (data) => {
+      delete window[cb];
+      document.head.removeChild(script);
+      resolve(data);
+    };
+    const script = document.createElement('script');
+    const url = SCRIPT_URL + '?sheet=' + encodeURIComponent(sheetName) + '&callback=' + cb;
+    script.src = url;
+    script.onerror = () => reject(new Error('Erro de rede'));
+    document.head.appendChild(script);
+  });
+}
+
+// POST via fetch (no-cors) — resposta opaca, mas a gravação funciona
+async function sheetPost(payload) {
+  await fetch(SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+}
+
+/* =======================================================
+   LOAD DATA FROM SHEETS
+   ======================================================= */
+
+// Cada aba tem cabeçalho na linha 1 — convertemos para objetos
+function rowsToObjects(rows) {
+  if (!rows || rows.length < 2) return [];
+  const [header, ...data] = rows;
+  return data.map(row => {
+    const obj = {};
+    header.forEach((key, i) => { obj[key] = row[i] ?? ''; });
+    return obj;
+  });
+}
+
+async function loadAll() {
+  if (!checkConfig()) return;
+  try {
+    // Carros (aba "cars")
+    const carRows = await sheetGet('cars').catch(() => null);
+    if (carRows) {
+      state.cars = rowsToObjects(carRows).filter(r => r.id && r.name);
+    }
+
+    // Abastecimentos
+    const fuelRows = await sheetGet('fuel').catch(() => null);
+    if (fuelRows) {
+      state.fuelLogs = rowsToObjects(fuelRows)
+        .filter(r => r.id)
+        .map(r => ({ ...r, liters: parseFloat(r.liters) || 0, price: parseFloat(r.price) || 0, total: parseFloat(r.total) || 0, km: parseInt(r.km) || null }));
+    }
+
+    // Óleo
+    const oilRows = await sheetGet('oil').catch(() => null);
+    if (oilRows) {
+      state.oilLogs = rowsToObjects(oilRows)
+        .filter(r => r.id)
+        .map(r => ({ ...r, km: parseInt(r.km) || null, nextKm: parseInt(r.nextKm) || null, cost: parseFloat(r.cost) || 0 }));
+    }
+
+    // Manutenção
+    const maintRows = await sheetGet('maintenance').catch(() => null);
+    if (maintRows) {
+      state.maintLogs = rowsToObjects(maintRows)
+        .filter(r => r.id)
+        .map(r => ({ ...r, km: parseInt(r.km) || null, cost: parseFloat(r.cost) || 0 }));
+    }
+
+    if (!state.activeCar && state.cars.length) state.activeCar = state.cars[0].id;
+    renderAll();
+  } catch (e) {
+    toast('Erro ao carregar dados: ' + e.message, 'err');
+  }
+}
+
+/* =======================================================
+   CARS
+   ======================================================= */
+function openCarModal() {
+  renderModalCarList();
+  document.getElementById('car-modal').classList.add('open');
+}
+function closeCarModal() { document.getElementById('car-modal').classList.remove('open'); }
+
+function renderModalCarList() {
+  const el = document.getElementById('modal-car-list');
+  if (!state.cars.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:.5rem 0">Nenhum carro ainda.</div>';
+    return;
+  }
+  el.innerHTML = state.cars.map(c => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:14px;font-weight:500">${c.name}</span>
+      <button class="btn btn-danger" onclick="deleteCar('${c.id}')"><i class="ti ti-trash" aria-hidden="true"></i></button>
+    </div>`).join('');
+}
+
+async function addCar() {
+  const name = document.getElementById('new-car-name').value.trim();
+  if (!name) return;
+  const car = { id: uid(), name };
+  state.cars.push(car);
+  if (!state.activeCar) state.activeCar = car.id;
+  document.getElementById('new-car-name').value = '';
+  renderModalCarList();
+  renderAll();
+  // Save to sheet
+  await sheetPost({ sheet: 'cars', action: 'append', row: [car.id, car.name] });
+  toast('Carro adicionado!');
+}
+
+async function deleteCar(id) {
+  state.cars = state.cars.filter(c => c.id !== id);
+  if (state.activeCar === id) state.activeCar = state.cars[0]?.id || null;
+  renderModalCarList();
+  renderAll();
+  await sheetPost({ sheet: 'cars', action: 'delete', id });
+  toast('Carro removido');
+}
+
+/* =======================================================
+   GPS
+   ======================================================= */
+function getGPS() {
+  if (!navigator.geolocation) { toast('GPS não disponível neste navegador', 'err'); return; }
+  navigator.geolocation.getCurrentPosition(pos => {
+    gpsCoords = { lat: pos.coords.latitude.toFixed(5), lng: pos.coords.longitude.toFixed(5) };
+    const tag = document.getElementById('gps-tag');
+    tag.textContent = '📍 ' + gpsCoords.lat + ', ' + gpsCoords.lng;
+    tag.style.display = 'block';
+    toast('Localização capturada!');
+  }, () => toast('Não foi possível obter o GPS', 'err'));
+}
+
+/* =======================================================
+   SAVE FUEL
+   ======================================================= */
+async function saveFuel() {
+  if (!state.cars.length) { openCarModal(); return; }
+  const liters = parseFloat(document.getElementById('f-liters').value);
+  const price  = parseFloat(document.getElementById('f-price').value);
+  if (!liters || !price) { toast('Preencha litros e preço', 'err'); return; }
+
+  const log = {
+    id: uid(),
+    car: document.getElementById('f-car').value,
+    date: document.getElementById('f-date').value,
+    liters, price,
+    total: +(liters * price).toFixed(2),
+    km: parseInt(document.getElementById('f-km').value) || '',
+    fuelType: document.getElementById('f-ftype').value,
+    location: document.getElementById('f-location').value,
+    gpsLat: gpsCoords?.lat || '',
+    gpsLng: gpsCoords?.lng || '',
+    full: document.getElementById('f-full').value,
+    notes: document.getElementById('f-notes').value
+  };
+
+  setBusy('btn-save-fuel', 'spin-fuel', true);
+  state.fuelLogs.unshift(log);
+  renderAll();
+  // reset
+  ['f-liters','f-price','f-km','f-location','f-notes'].forEach(id => document.getElementById(id).value = '');
+  gpsCoords = null;
+  document.getElementById('gps-tag').style.display = 'none';
+
+  await sheetPost({
+    sheet: 'fuel', action: 'append',
+    row: [log.id, log.car, log.date, log.liters, log.price, log.total,
+          log.km, log.fuelType, log.location, log.gpsLat, log.gpsLng, log.full, log.notes]
+  });
+  setBusy('btn-save-fuel', 'spin-fuel', false);
+  toast('Abastecimento salvo na planilha!');
+  showTab('dashboard');
+}
+
+/* =======================================================
+   SAVE OIL
+   ======================================================= */
+async function saveOil() {
+  if (!state.cars.length) { openCarModal(); return; }
+  const log = {
+    id: uid(),
+    car: document.getElementById('o-car').value,
+    date: document.getElementById('o-date').value,
+    km: parseInt(document.getElementById('o-km').value) || '',
+    nextKm: parseInt(document.getElementById('o-next-km').value) || '',
+    oilType: document.getElementById('o-otype').value,
+    cost: parseFloat(document.getElementById('o-cost').value) || 0,
+    notes: document.getElementById('o-notes').value
+  };
+
+  setBusy('btn-save-oil', 'spin-oil', true);
+  state.oilLogs.unshift(log);
+  renderAll();
+  ['o-km','o-next-km','o-otype','o-cost','o-notes'].forEach(id => document.getElementById(id).value = '');
+
+  await sheetPost({
+    sheet: 'oil', action: 'append',
+    row: [log.id, log.car, log.date, log.km, log.nextKm, log.oilType, log.cost, log.notes]
+  });
+  setBusy('btn-save-oil', 'spin-oil', false);
+  toast('Troca de óleo salva!');
+  showTab('history');
+}
+
+/* =======================================================
+   SAVE MAINTENANCE
+   ======================================================= */
+async function saveMaint() {
+  if (!state.cars.length) { openCarModal(); return; }
+  const log = {
+    id: uid(),
+    car: document.getElementById('m-car').value,
+    date: document.getElementById('m-date').value,
+    maintType: document.getElementById('m-type').value,
+    cost: parseFloat(document.getElementById('m-cost').value) || 0,
+    km: parseInt(document.getElementById('m-km').value) || '',
+    nextDate: document.getElementById('m-next-date').value,
+    notes: document.getElementById('m-notes').value
+  };
+
+  setBusy('btn-save-maint', 'spin-maint', true);
+  state.maintLogs.unshift(log);
+  renderAll();
+  ['m-cost','m-km','m-next-date','m-notes'].forEach(id => document.getElementById(id).value = '');
+
+  await sheetPost({
+    sheet: 'maintenance', action: 'append',
+    row: [log.id, log.car, log.date, log.maintType, log.cost, log.km, log.nextDate, log.notes]
+  });
+  setBusy('btn-save-maint', 'spin-maint', false);
+  toast('Manutenção salva!');
+  showTab('history');
+}
+
+/* =======================================================
+   DELETE
+   ======================================================= */
+async function deleteRecord(type, id) {
+  if (!confirm('Remover este registro?')) return;
+  if (type === 'fuel') state.fuelLogs = state.fuelLogs.filter(l => l.id !== id);
+  else if (type === 'oil') state.oilLogs = state.oilLogs.filter(l => l.id !== id);
+  else state.maintLogs = state.maintLogs.filter(l => l.id !== id);
+  renderAll();
+  await sheetPost({ sheet: type === 'fuel' ? 'fuel' : type === 'oil' ? 'oil' : 'maintenance', action: 'delete', id });
+  toast('Registro removido');
+}
+
+/* =======================================================
+   RENDER — DASHBOARD
+   ======================================================= */
+function renderDashboard() {
+  const ac = state.activeCar;
+  const fuels = state.fuelLogs.filter(l => !ac || l.car === ac)
+    .slice().sort((a, b) => a.date < b.date ? -1 : 1);
+
+  // Total gasto
+  const total = fuels.reduce((s, l) => s + (l.total || 0), 0);
+  document.getElementById('s-total').textContent = 'R$ ' + fmt(total);
+
+  // Consumo médio
+  const fullFuels = fuels.filter(l => l.full === '1' && l.km);
+  let avgText = '— km/L';
+  if (fullFuels.length >= 2) {
+    let tkm = 0, tl = 0;
+    for (let i = 1; i < fullFuels.length; i++) {
+      const km = fullFuels[i].km - fullFuels[i - 1].km;
+      if (km > 0) { tkm += km; tl += fullFuels[i].liters; }
+    }
+    if (tl > 0) avgText = (tkm / tl).toFixed(1) + ' km/L';
+  }
+  document.getElementById('s-avg').textContent = avgText;
+
+  // Último preço
+  const lastFuel = fuels[fuels.length - 1];
+  document.getElementById('s-price').textContent = lastFuel ? 'R$ ' + (lastFuel.price || 0).toFixed(2) + '/L' : 'R$ —/L';
+
+  // KM range
+  const kms = fuels.filter(l => l.km).map(l => l.km);
+  if (kms.length >= 2) {
+    document.getElementById('s-km').textContent = (Math.max(...kms) - Math.min(...kms)).toLocaleString('pt-BR') + ' km';
+  } else {
+    document.getElementById('s-km').textContent = (kms[0] || 0).toLocaleString('pt-BR') + ' km';
+  }
+
+  // Charts
+  const recent = fuels.slice(-10);
+  barChart('chart-liters', recent, l => l.liters || 0, l => (l.liters || 0).toFixed(1) + 'L', 'var(--accent)');
+  barChart('chart-cost',   recent, l => l.total  || 0, l => 'R$' + (l.total || 0).toFixed(0), 'var(--blue)');
+
+  // Upcoming
+  const todayStr = today();
+  const maints = state.maintLogs.filter(l => !ac || l.car === ac)
+    .filter(l => l.nextDate && l.nextDate >= todayStr)
+    .sort((a, b) => a.nextDate > b.nextDate ? 1 : -1).slice(0, 5);
+  const oilDue = state.oilLogs.filter(l => !ac || l.car === ac)
+    .filter(l => l.nextKm).sort((a, b) => b.km - a.km).slice(0, 3);
+
+  let html = '';
+  maints.forEach(m => {
+    const cName = state.cars.find(c => c.id === m.car)?.name || '?';
+    const days = Math.round((new Date(m.nextDate) - new Date()) / 86400000);
+    html += `<div class="upcoming-row">
+      <div><div style="font-size:13px;font-weight:600">${m.maintType}</div><div style="font-size:11px;color:var(--muted)">${cName}</div></div>
+      <div style="text-align:right">
+        <span class="badge badge-maint">${m.nextDate}</span>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px">${days > 0 ? 'em ' + days + 'd' : 'Vencido'}</div>
+      </div>
+    </div>`;
+  });
+  oilDue.forEach(o => {
+    const cName = state.cars.find(c => c.id === o.car)?.name || '?';
+    html += `<div class="upcoming-row">
+      <div><div style="font-size:13px;font-weight:600">Troca de Óleo</div><div style="font-size:11px;color:var(--muted)">${cName}</div></div>
+      <span class="badge badge-oil">até ${(o.nextKm || 0).toLocaleString('pt-BR')} km</span>
+    </div>`;
+  });
+  document.getElementById('upcoming-maint').innerHTML = html ||
+    '<div class="empty"><i class="ti ti-check"></i>Sem manutenções pendentes</div>';
+}
+
+function barChart(id, data, valFn, labelFn, color) {
+  const el = document.getElementById(id);
+  if (!data.length) { el.innerHTML = '<div class="empty" style="width:100%"><i class="ti ti-chart-bar"></i>Sem dados</div>'; return; }
+  const vals = data.map(valFn);
+  const max = Math.max(...vals) || 1;
+  el.innerHTML = data.map((l, i) => {
+    const pct = Math.max(3, (vals[i] / max) * 100);
+    return `<div class="bar-col">
+      <div class="bar-area"><div class="bar" style="height:${pct}%;background:${color};opacity:.8"></div></div>
+      <div class="bar-val">${labelFn(l)}</div>
+      <div class="bar-label">${(l.date || '').slice(5)}</div>
+    </div>`;
+  }).join('');
+}
+
+/* =======================================================
+   RENDER — SELECTS & CHIPS
+   ======================================================= */
+function renderCarSelects() {
+  const opts = state.cars.length
+    ? state.cars.map(c => `<option value="${c.id}">${c.name}</option>`).join('')
+    : '<option value="">— Nenhum carro —</option>';
+
+  ['f-car', 'o-car', 'm-car'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = opts;
+  });
+
+  const hcar = document.getElementById('h-filter-car');
+  if (hcar) hcar.innerHTML = '<option value="">Todos os carros</option>' +
+    state.cars.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+
+  const chips = document.getElementById('car-chips-dash');
+  if (chips) {
+    chips.innerHTML =
+      `<div class="car-chip${!state.activeCar ? ' active' : ''}" onclick="setActiveCar(null)">
+        <i class="ti ti-stack" aria-hidden="true"></i> Todos
+      </div>` +
+      state.cars.map(c =>
+        `<div class="car-chip${state.activeCar === c.id ? ' active' : ''}" onclick="setActiveCar('${c.id}')">
+          <i class="ti ti-car" aria-hidden="true"></i> ${c.name}
+        </div>`).join('') +
+      `<div class="car-chip" onclick="openCarModal()" style="border-style:dashed">
+        <i class="ti ti-plus" aria-hidden="true"></i> Carro
+      </div>`;
+  }
+}
+
+function setActiveCar(id) { state.activeCar = id; renderAll(); }
+
+/* =======================================================
+   RENDER — HISTORY
+   ======================================================= */
+function renderHistory() {
+  const carF  = document.getElementById('h-filter-car')?.value || '';
+  const typeF = document.getElementById('h-filter-type')?.value || '';
+
+  let all = [
+    ...state.fuelLogs.map(l => ({ ...l, _type: 'fuel' })),
+    ...state.oilLogs.map(l => ({ ...l, _type: 'oil' })),
+    ...state.maintLogs.map(l => ({ ...l, _type: 'maintenance' }))
+  ];
+  if (carF) all = all.filter(l => l.car === carF);
+  if (typeF) all = all.filter(l => l._type === typeF);
+  all.sort((a, b) => b.date > a.date ? 1 : -1);
+
+  const el = document.getElementById('history-table');
+  if (!all.length) {
+    el.innerHTML = '<div class="empty"><i class="ti ti-database"></i>Nenhum registro encontrado</div>';
+    return;
+  }
+
+  el.innerHTML = `<table>
+    <thead><tr>
+      <th>Data</th><th>Carro</th><th>Tipo</th><th>Detalhes</th><th>Custo</th><th></th>
+    </tr></thead>
+    <tbody>${all.map(l => {
+      const cName = state.cars.find(c => c.id === l.car)?.name || '?';
+      let badge = '', detail = '', cost = '—';
+      if (l._type === 'fuel') {
+        badge = '<span class="badge badge-fuel"><i class="ti ti-gas-station"></i> Combust.</span>';
+        detail = `${l.liters}L · ${l.fuelType}${l.km ? ' · ' + (+l.km).toLocaleString('pt-BR') + ' km' : ''}${l.location ? ' · ' + l.location : ''}`;
+        cost = 'R$ ' + fmt(l.total);
+      } else if (l._type === 'oil') {
+        badge = '<span class="badge badge-oil"><i class="ti ti-oil"></i> Óleo</span>';
+        detail = `${l.oilType || ''}${l.km ? ' · ' + (+l.km).toLocaleString('pt-BR') + ' km' : ''}${l.nextKm ? ' → ' + (+l.nextKm).toLocaleString('pt-BR') + ' km' : ''}`;
+        cost = l.cost ? 'R$ ' + fmt(l.cost) : '—';
+      } else {
+        badge = '<span class="badge badge-maint"><i class="ti ti-tool"></i> Manutenção</span>';
+        detail = `${l.maintType}${l.km ? ' · ' + (+l.km).toLocaleString('pt-BR') + ' km' : ''}`;
+        cost = l.cost ? 'R$ ' + fmt(l.cost) : '—';
+      }
+      return `<tr>
+        <td style="font-family:'DM Mono',monospace;font-size:11px;white-space:nowrap">${l.date}</td>
+        <td style="font-size:12px;white-space:nowrap">${cName}</td>
+        <td>${badge}</td>
+        <td style="font-size:11px;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${detail}">${detail}</td>
+        <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--accent);white-space:nowrap">${cost}</td>
+        <td><button class="btn btn-danger" onclick="deleteRecord('${l._type}','${l.id}')"><i class="ti ti-trash" aria-hidden="true"></i></button></td>
+      </tr>`;
+    }).join('')}</tbody></table>`;
+}
+
+/* =======================================================
+   RENDER ALL
+   ======================================================= */
+function renderAll() {
+  renderCarSelects();
+  renderDashboard();
+  renderHistory();
+}
+
+/* =======================================================
+   TABS
+   ======================================================= */
+function showTab(name) {
+  ['dashboard', 'fuel', 'maintenance', 'history'].forEach(t => {
+    document.getElementById('tab-' + t).style.display = t === name ? 'block' : 'none';
+  });
+  document.querySelectorAll('.tab').forEach((btn, i) => {
+    btn.classList.toggle('active', ['dashboard', 'fuel', 'maintenance', 'history'][i] === name);
+  });
+  if (name === 'history') renderHistory();
+}
+
+/* =======================================================
+   INIT
+   ======================================================= */
+function init() {
+  // set today on all date inputs
+  const td = today();
+  ['f-date', 'o-date', 'm-date'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = td;
+  });
+  checkConfig();
+  loadAll();
+}
+
+init();
+</script>
+</body>
+</html>
